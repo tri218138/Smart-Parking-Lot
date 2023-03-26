@@ -15,11 +15,10 @@ def handle_test():
     return "test"
 
 
-@app.route("/summarizer", methods=['GET', 'POST'])
+@app.route("/post", methods=['GET', 'POST'])
 def handle_post_request():
-    data = request.json
-    message = data
-    response = f"Output: {output}"
+    data = request.get_json()
+    response = f"Server received: {data}"
     return jsonify(response), 200
 
 if __name__ == '__main__':

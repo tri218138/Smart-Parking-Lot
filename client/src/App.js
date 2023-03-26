@@ -1,27 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 function App() {
-  const [input, setInput] = useState("");
-  const [type, setType] = useState("SpaCy")
-  const [ratio, setRatio] = useState("0.8")
+  const [text, setText] = useState("");
 
   const handleClick = (event) => {
     event.preventDefault();
     let xml = new XMLHttpRequest();
-    xml.open("POST", "http://localhost:5000/summarizer", true)
+    xml.open("POST", "http://localhost:5000/post", true)
     xml.setRequestHeader("Content-type", "application/json");
     xml.setRequestHeader("Access-Control-Allow-Origin", "*");
     xml.onreadystatechange = function () {
       if (xml.readyState === 4 && xml.status === 200) {
+        // Check console to see if you data have sent
         console.log(xml.responseText);
       }
     };
 
-    let data = JSON.stringify({
-      'input': { input },
-      'type': { type },
-      'ratio': { ratio }
-    })
+    let data = JSON.stringify({ text })
 
     xml.send(data)
   }
@@ -29,19 +24,12 @@ function App() {
   return (
     <div>
       <textarea
+        placeholder='Send something to server'
         type="text"
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
       />
-      <select value={type} onChange={(e) => setType(e.target.value)}>
-        <option value="SpaCy">SpaCy</option>
-        <option value="NLTK">NLTK</option>
-        <option value="GenSim">GenSim</option>
-        <option value="Summa">GenSim</option>
-      </select>
-
-      <input type="text" value={ratio} onChange={(e) => setRatio(e.target.value)} />
-      <input type="submit" value="Summarize" onClick={(handleClick)} />
+      <input type="submit" value="Send" onClick={(handleClick)} />
     </div>
 
 
