@@ -2,7 +2,7 @@ import cv2
 import time
 import numpy as np
 
-data_path = "public/videos/video.mp4"
+data_path = "server/public/videos/longest.mp4"
 
 def get_center_point(rect):
     x, y, w, h = rect
@@ -45,6 +45,7 @@ class App:
         # self.trackers = cv2.legacy.MultiTracker_create()
         self.trackers = []
         self.boxes = []
+        self.delay = 1
     def addTracker(self, frame, box):
         tracker = Tracker(frame, box)
         self.trackers.append(tracker)
@@ -85,13 +86,20 @@ class App:
         return frame[rect[1]: rect[1] + rect[3], rect[0]: rect[0] + rect[2]]
     def traceBox(self, rect, box):
         return (box[0] + rect[0], box[1] + rect[1], box[2], box[3]) #hold w, h
+    def isGetFrameSucceed(self):
+        if self.ret is False:
+            print("Can not load video")
+            return False
+        return True
     def run(self):
-        self.rect = [600, 0, self.frame.shape[1] - 600, 100] # x, y, w, h
+        if not self.isGetFrameSucceed(): return
+        # self.rect = [600, 0, self.frame.shape[1] - 600, 100] # x, y, w, h
+        self.rect = [0, 0, self.frame.shape[1], self.frame.shape[0]]
         while True:
             self.ret, self.frame = self.cap.read()
-
+            if not self.isGetFrameSucceed(): return
             drop = self.dropFrame(self.frame, self.rect)
-            if cv2.waitKey(1) & 0xFF == ord('a'):
+            if cv2.waitKey(self.delay) & 0xFF == ord('a'):
                 self.detectObject(drop)
 
             self.updateTracers()
@@ -103,13 +111,12 @@ class App:
             cv2.imshow('Object Tracking', self.frame)
             cv2.imshow('Drop', drop)
 
-            if self.handleBreak():
-                break
+            if self.handleBreak(): break
         self.cap.release()
         cv2.destroyAllWindows()
 
     def handleBreak(self):
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        if cv2.waitKey(self.delay) & 0xFF == ord('q'):
             return True
         return False
 
@@ -122,7 +129,7 @@ class App:
         while True:
             if time.time() - current > 5:                            
                 current = time.time()
-                dots = []
+                # dots = []
             _, self.frame = self.cap.read()
             mask = self.object_detector.apply(self.frame)
             _, mask = cv2.threshold(mask , 254, 255, cv2.THRESH_BINARY)
@@ -157,7 +164,7 @@ class App:
                 cv2.rectangle(self.frame, (x, y), (x + w, y + h), (0, 255, 0))
             cv2.imshow('Object Selection', self.frame)
             cv2.imshow('Object Center', self.gray)
-            if cv2.waitKey(1) & 0xFF == ord('q'):
+            if cv2.waitKey(self.delay) & 0xFF == ord('q'):
                 break
 
-App(data_path).trace()
+App(data_path).run()
