@@ -4,14 +4,17 @@ body {
     height: 100vh;
 }
 
-h1, h2 {
+h1,
+h2 {
     text-align: center;
 }
 
 table {
     border-collapse: collapse;
 }
-th, td {
+
+th,
+td {
     padding: 20px;
     border: 1px solid black;
 }
@@ -23,14 +26,23 @@ th, td {
 
 .column {
     flex: 1;
-    padding: 10px;
-    box-sizing: border-box;
+    margin-right: 10px;
 }
 
 .column-1 {
     background-color: #f2f2f2;
+    max-height: 70vh;
 }
 
 .column-2 {
     background-color: #ddd;
+    max-height: 70vh;
+    overflow-y: scroll;
+}
+
+.row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
 }

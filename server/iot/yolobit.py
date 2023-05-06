@@ -72,10 +72,11 @@ class Yolobit:
         self.client.loop_background()
 
     def callDatabase(self, key):
-        with open('server\database\database.json', 'r') as f:
+        with open('server\database\\vehicle_id.json', 'r') as f:
             data = json.load(f)
         result = next((item for item in data if item['key'] == key), None)
         if result is not None:
+            print(key, result["pos"])
             return result["pos"]
         else:
             return "Not found!"
@@ -91,7 +92,7 @@ class Yolobit:
                 self.data["wind"] = "On"
             else:
                 self.data["wind"] = "Off"
-            print(self.data)
+            # print(self.data)
             time.sleep(2)
 
     def getData(self, field):

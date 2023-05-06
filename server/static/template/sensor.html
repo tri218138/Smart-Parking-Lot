@@ -1,32 +1,46 @@
-<table>
+<!-- <table>
     <tr>
         <th>Sensor</th>
         <th>Value</th>
         <th>Unit</th>
-        <!-- <th>Status</th> -->
     </tr>
     <tr>
         <td>Temperature</td>
         <td style="background-color: red"><span id="temperature"></span></td>
         <td>&deg;C</td>
-        <!-- <td>Normal</td> -->
     </tr>
     <tr>
         <td>Humidity</td>
         <td style="background-color: green"><span id="humidity"></span></td>
         <td>%</td>
-        <!-- <td>Normal</td> -->
     </tr>
     <tr>
         <td>Wind</td>
         <td style="background-color:aquamarine"><span id="wind"></span></td>
         <td></td>
-        <!-- <td>Normal</td> -->
     </tr>
     <tr>
         <td>Motion</td>
         <td style="background-color: gray">No</td>
         <td></td>
-        <!-- <td>Normal</td> -->
     </tr>
-</table>
+</table> -->
+
+<div class="row">
+    <div class="column" style="background-color: gray">
+        <p>Motion: </p>
+        <span id="motion">No</span>
+    </div>
+    <div class="column" style="background-color:aquamarine">
+        <p>Quạt gió: </p>
+        <span id="motion">Off</span>
+    </div>
+    <div class="column" style="background-color: rgb(88, 222, 88)">
+        <p>Độ ẩm: </p>
+        <span id="humidity">Loading...</span><span>%</span>
+    </div>
+    <div class="column" style="background-color: rgb(243, 135, 135)">
+        <p>Nhiệt độ: </p>
+        <span id="temperature">Loading...</span><span>*C</span>
+    </div>
+</div>

@@ -1,11 +1,13 @@
 import cv2
 from tracker import *
 import math
-import time
+import time, datetime
 import numpy as np
 from scipy import stats, polyfit
 # from polyROISelector import polyROISelector
 from sklearn.linear_model import LinearRegression
+import json
+import random, string
 
 def is_rect_inside_another(rect1, rect2):
     if rect1[0] >= rect2[0] and rect1[1] >= rect2[1] and rect1[0] + rect1[2] <= rect2[0] + rect2[2] and rect1[1] + rect1[3] <= rect2[1] + rect2[3]:
@@ -18,6 +20,35 @@ def is_point_inside_rect(p, rect):
         return True
     else:
         return False
+def point_inside_polygon(point, polygon):
+    # Convert the point and polygon to numpy arrays
+    point = (int(point[0]), int(point[1]))
+    polygon = np.array(polygon, dtype=np.int32)
+    
+    # Use the PointPolygonTest function to check if the point is inside the polygon
+    result = cv2.pointPolygonTest(polygon, point, False)
+    
+    # Return True if the point is inside the polygon, False otherwise
+    return result >= 0
+
+def generate_random_vehicle_id():
+    digits = random.choices(string.digits, k=2)
+    uppercase_alpha = random.choice(string.ascii_uppercase)
+    separator = '-'
+    more_digits = random.choices(string.digits, k=5)
+    
+    random_string = ''.join(digits + [uppercase_alpha] + [separator] + more_digits)
+    return random_string
+
+def updateVehicleIdJsonData(new_data):
+    with open('server\database\\vehicle_id.json', 'r') as file:
+        existing_data = json.load(file)
+
+    existing_data += new_data
+
+    # Write the updated object back to the JSON file
+    with open('server\database\\vehicle_id.json', 'w') as file:
+        json.dump(existing_data, file, indent=4)
 
 class MeasureTakenTime:
     def __init__(self):
@@ -133,13 +164,31 @@ class EuclideanDistTracker:
 
         return [veh.rect + [veh.id] for idx, veh in self.vehicles.items()]
     
-    def checkParkedVehicle(self, specialFrames):
+    # def checkParkedVehicle(self, specialFrames):
+    #     for key in list(self.vehicles.keys()):
+    #         if self.vehicles[key].isParked():
+    #             for place in specialFrames:
+    #                 if is_point_inside_rect(self.vehicles[key].getCenterPoint(), specialFrames[place]):
+    #                     print("Vehicle {} is already parked at {} in {}".format(key, self.vehicles[key].getCenterPoint(), place))
+    #             del self.vehicles[key]
+
+    def checkParkedVehicle(self, ranges):
+        # print("aaaaa")
+        new_data = []
         for key in list(self.vehicles.keys()):
             if self.vehicles[key].isParked():
-                for place in specialFrames:
-                    if is_point_inside_rect(self.vehicles[key].getCenterPoint(), specialFrames[place]):
-                        print("Vehicle {} is already parked at {} in {}".format(key, self.vehicles[key].getCenterPoint(), place))
+                for range_ in ranges:
+                    if point_inside_polygon(self.vehicles[key].getCenterPoint(), range_["polygon"]):
+                        new_data.append({
+                            "key": f"{generate_random_vehicle_id()}",
+                            "id": f"{key}",
+                            "pos": f"{range_['id']}",
+                            "time": f"{datetime.datetime.now().strftime('%H:%M:%S')}"
+                        })
+                        print("Vehicle {} is already parked at {} in {}".format(key, self.vehicles[key].getCenterPoint(), range_["id"]))
                 del self.vehicles[key]
+        if len(new_data) > 0:
+            updateVehicleIdJsonData(new_data)
 
     def addNewTracker(self, objects_rect):
         for rect in objects_rect:
@@ -154,8 +203,6 @@ class EuclideanDistTracker:
                 self.vehicles[self.id_count] = Vehicle(self.id_count, rect)
                 self.id_count += 1
 
-
-
 trackerED = EuclideanDistTracker()
 
 class AppTracking:
@@ -169,12 +216,85 @@ class AppTracking:
         self.specialFrame = {
             "gate": [600, 70, self.frame.shape[1] - 600 - 80, 70]
         }
+
+        self.isSettingRanges = False
+        self.ranges = []
+        
+        self.firstFrame = None
+
+        self.collectFirstFrame()
+        self.loadMultiRanges()
+
     def getResultFrame(self):
         return self.frame
+    
+    def collectFirstFrame(self):
+        self.ret, self.frame = self.cap.read()
+        while not self.ret:
+            self.ret, self.frame = self.cap.read()
+        self.firstFrame = self.frame
+
+    def mouse_callback(self, event, x, y, flags, param):
+        if event == cv2.EVENT_LBUTTONDOWN:
+            if not self.isSettingRanges:
+                self.ranges.append({
+                    "polygon" : [],
+                    "id" : f"range {len(self.ranges)}",
+                })
+                self.isSettingRanges = True
+            self.ranges[-1]["polygon"].append([x, y])
+        if event == cv2.EVENT_RBUTTONDOWN:
+            self.ranges[-1]["polygon"].append(self.ranges[-1]["polygon"][0])
+            self.isSettingRanges = False
+
+    def drawPolygonSettings(self):
+        if len(self.ranges) > 0:
+            for i in range(0, len(self.ranges) - 1):
+                if len(self.ranges[i]["polygon"]) == 1:
+                    cv2.circle(self.firstFrame, self.ranges[i]["polygon"][0], 1, (0, 255, 0), 5)
+                else:
+                    cv2.polylines(self.firstFrame, [np.array(self.ranges[i]["polygon"])], True, (0, 255, 0), 5)
+            if len(self.ranges[-1]["polygon"]) == 1:
+                cv2.circle(self.firstFrame, self.ranges[-1]["polygon"][0], 1, (0, 0, 255), 5)
+            else:
+                cv2.polylines(self.firstFrame, [np.array(self.ranges[-1]["polygon"])], False if self.isSettingRanges else True, (0, 0, 255) if self.isSettingRanges else (0, 255, 0), 5)
+    
+    def setMultiRanges(self):
+        if self.firstFrame is not None:
+            cv2.namedWindow('Set multi ranges')
+            cv2.setMouseCallback('Set multi ranges', self.mouse_callback)
+
+            while True:
+                self.drawPolygonSettings()
+                # for range_ in self.ranges:
+                #     for point in range_["polygon"]:
+                #         x, y = point
+                #         cv2.circle(self.firstFrame, (x, y), 1, (0, 255, 0), 5)
+
+                cv2.imshow('Set multi ranges', self.firstFrame)
+
+                # Wait for a key press
+                key = cv2.waitKey(1) & 0xFF
+
+                # Exit the loop if 'esc' is pressed
+                if key == 27:
+                    break
+            output_file = 'server\database\\ranges.json'
+            with open(output_file, 'w') as f:
+                json.dump(self.ranges, f)
+
+    def loadMultiRanges(self):
+        with open('server\database\\ranges.json', 'r') as f:
+            self.ranges = json.load(f)
+    
     def run(self):
         # self.setSpecialFrame(cv2.selectROI(self.frame), "gate")
         # self.setSpecialFrame(cv2.selectROI(self.frame), "range A")
         # self.setSpecialFrame(cv2.selectROI(self.frame), "range B")
+
+        # self.setMultiRanges()
+        self.loadMultiRanges()
+
         while True:
             self.ret, self.frame = self.cap.read()
             if not self.ret: continue
@@ -186,8 +306,10 @@ class AppTracking:
 
             trackerED.addNewTracker(detected_rect_roi)
             boxes_ids = trackerED.updateOldTracker(detected_rect)
-            trackerED.checkParkedVehicle(self.getAllSpecialFrames())
+            trackerED.checkParkedVehicle(self.ranges)
             trackerED.removeDuplicate()
+
+            self.drawPolygonSettings()
 
             for box_id in boxes_ids:
                 x, y, w, h, id = box_id
@@ -198,7 +320,8 @@ class AppTracking:
             roi = self.getRoi(self.frame, self.getSpecialFrame())
 
             # cv2.imshow("Mask", self.mask)
-            # cv2.imshow("Frame", self.frame)
+            cv2.imshow("Ranges", self.firstFrame)
+            cv2.imshow("Frame", self.frame)
             # cv2.imshow("Roi", roi)
 
             key = cv2.waitKey(10)
@@ -207,6 +330,7 @@ class AppTracking:
 
         self.cap.release()
         cv2.destroyAllWindows()
+
     def work(self):
         self.ret, self.frame = self.cap.read()
         roi = self.frame
@@ -217,7 +341,8 @@ class AppTracking:
 
         trackerED.addNewTracker(detected_rect_roi)
         boxes_ids = trackerED.updateOldTracker(detected_rect)
-        trackerED.checkParkedVehicle(self.getAllSpecialFrames())
+        # trackerED.checkParkedVehicle(self.getAllSpecialFrames())
+        trackerED.checkParkedVehicle(self.ranges)
         trackerED.removeDuplicate()
 
         for box_id in boxes_ids:
@@ -227,6 +352,7 @@ class AppTracking:
             cv2.rectangle(roi, (x, y), (x + w, y + h), (0, 255, 0), 1)
 
         roi = self.getRoi(self.frame, self.getSpecialFrame())
+
     def detect(self, roi) -> list():
         mask = self.object_detector.apply(roi)
         detections = []
@@ -240,13 +366,18 @@ class AppTracking:
             if area > AppTracking.vehicleArea:
                 detections.append([x, y, w, h])
         return detections
+    
     def setSpecialFrame(self, rect, name = "gate"):
         self.specialFrame[name] = rect
+
     def getSpecialFrame(self, name = "gate"):
         return self.specialFrame[name]
+    
     def getAllSpecialFrames(self):
         return self.specialFrame
+    
     def getRoi(self, frame, rect):
         x, y, w, h = rect
         return frame[y:y+h,x:x+w]
+    
 # AppTracking().run()
