@@ -1,3 +1,5 @@
 # dependencies
+./vscode
 /client/node_modules
 server\__pycache__
+server\iot\__pycache__

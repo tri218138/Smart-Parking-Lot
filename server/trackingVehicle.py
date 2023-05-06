@@ -158,11 +158,10 @@ class EuclideanDistTracker:
 
 trackerED = EuclideanDistTracker()
 
-class App:
-    data_path = "server/public/videos/longest.mp4"
+class AppTracking:
     vehicleArea = 30.0
-    def __init__(self):
-        self.cap = cv2.VideoCapture(App.data_path)
+    def __init__(self, path = "server/public/videos/longest.mp4"):
+        self.cap = cv2.VideoCapture(path)
         self.object_detector = cv2.createBackgroundSubtractorMOG2(
             history=200, varThreshold=50, detectShadows=False)
         self.ret, self.frame = self.cap.read()
@@ -170,8 +169,10 @@ class App:
         self.specialFrame = {
             "gate": [600, 70, self.frame.shape[1] - 600 - 80, 70]
         }
+    def getResultFrame(self):
+        return self.frame
     def run(self):
-        self.setSpecialFrame(cv2.selectROI(self.frame), "gate")
+        # self.setSpecialFrame(cv2.selectROI(self.frame), "gate")
         # self.setSpecialFrame(cv2.selectROI(self.frame), "range A")
         # self.setSpecialFrame(cv2.selectROI(self.frame), "range B")
         while True:
@@ -195,9 +196,10 @@ class App:
                 cv2.rectangle(roi, (x, y), (x + w, y + h), (0, 255, 0), 1)
 
             roi = self.getRoi(self.frame, self.getSpecialFrame())
-            cv2.imshow("Mask", self.mask)
-            cv2.imshow("Frame", self.frame)
-            cv2.imshow("Roi", roi)
+
+            # cv2.imshow("Mask", self.mask)
+            # cv2.imshow("Frame", self.frame)
+            # cv2.imshow("Roi", roi)
 
             key = cv2.waitKey(10)
             if key == 27:
@@ -205,6 +207,26 @@ class App:
 
         self.cap.release()
         cv2.destroyAllWindows()
+    def work(self):
+        self.ret, self.frame = self.cap.read()
+        roi = self.frame
+        detected_rect = self.detect(roi)
+
+        specFrame = self.getSpecialFrame()
+        detected_rect_roi = [rect for rect in detected_rect if is_rect_inside_another(rect, specFrame)]
+
+        trackerED.addNewTracker(detected_rect_roi)
+        boxes_ids = trackerED.updateOldTracker(detected_rect)
+        trackerED.checkParkedVehicle(self.getAllSpecialFrames())
+        trackerED.removeDuplicate()
+
+        for box_id in boxes_ids:
+            x, y, w, h, id = box_id
+            cv2.putText(roi, str(id), (x, y - 10),
+                        cv2.FONT_HERSHEY_COMPLEX, 0.5, (255, 0, 0), 1)
+            cv2.rectangle(roi, (x, y), (x + w, y + h), (0, 255, 0), 1)
+
+        roi = self.getRoi(self.frame, self.getSpecialFrame())
     def detect(self, roi) -> list():
         mask = self.object_detector.apply(roi)
         detections = []
@@ -215,7 +237,7 @@ class App:
         for cnt in contours:
             x, y, w, h = cv2.boundingRect(cnt)
             area = cv2.contourArea(cnt)
-            if area > App.vehicleArea:
+            if area > AppTracking.vehicleArea:
                 detections.append([x, y, w, h])
         return detections
     def setSpecialFrame(self, rect, name = "gate"):
@@ -227,4 +249,4 @@ class App:
     def getRoi(self, frame, rect):
         x, y, w, h = rect
         return frame[y:y+h,x:x+w]
-App().run()
+# AppTracking().run()
