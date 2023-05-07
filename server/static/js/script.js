@@ -2,10 +2,10 @@ function updateSensorData() {
     fetch("/data/sensor")
         .then((response) => response.json())
         .then((data) => {
-            document.getElementById("temperature").textContent =
-                data.temperature;
+            document.getElementById("temperature").textContent = data.temperature;
             document.getElementById("humidity").textContent = data.humidity;
             document.getElementById("wind").textContent = data.wind;
+            document.getElementById("pump").textContent = data.pump;
         });
 }
 

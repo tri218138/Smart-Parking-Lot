@@ -2,21 +2,26 @@ import json
 import time
 import sys
 import threading
-from  Adafruit_IO import  MQTTClient
+from  Adafruit_IO import  MQTTClient, Client
 from helperFunctions import SimulateData
+import cv2
 
 class Yolobit:
-    AIO_FEED_IDS = ["yolo.humi", "yolo.temp", "yolo.bike-db", "yolo.bike-locate"]
+    AIO_FEED_IDS = ["yolo.humi", "yolo.temp", "yolo.light", "yolo.bike-locate", "yolo.constraint"]
     AIO_USERNAME = "phuckhang2611"
-    AIO_KEY = "aio_yFQq06eTa1GFVaWUwJdOkdO6zKBe"
-
+    AIO_KEY = "aio_Srto85e4YK5lxylRXc8f5pa0c6RD"
+    constraint = {
+        "temp": 80,
+        "humi": 35.0
+    }
     def __init__(self):
         self.simulate = SimulateData()
-        # self.connectMQTTClient()
+        self.connectMQTTClient()
         self.data = {
             "temp" : "loading...",
             "humi" : "loading...",
             "wind" : "Off",
+            "pump" : "Off",
         }
 
         threading.Timer(0, self.simulateData).start()
@@ -33,22 +38,45 @@ class Yolobit:
         print("Break connection...")
         sys.exit(1)
 
+    def updateWind(self):
+        if int(self.data["humi"]) >= Yolobit.constraint["humi"]:
+            self.data["wind"] = "On"
+        else:
+            self.data["wind"] = "Off"
+
+    def updatePump(self):
+        if float(self.data["temp"]) >= Yolobit.constraint["temp"]:
+            self.data["pump"] = "On"
+        else:
+            self.data["pump"] = "Off"
+
+    def updateContraint(self):
+        aio = Client(Yolobit.AIO_USERNAME, Yolobit.AIO_KEY)
+        feed_id = 'yolo.constraint'
+        data = aio.receive(feed_id)
+        payload = data.value
+        tempVal, humiVal = payload.split("|")
+        Yolobit.constraint["temp"] = int(tempVal)
+        Yolobit.constraint["humi"] = float(humiVal)
+        print(f"""Updated Yolobit constraint
+        Temperature: {Yolobit.constraint["temp"]}
+        Huminity: {Yolobit.constraint["humi"]}""")
+
     def message(self, client , feed_id , payload):
         if feed_id == "yolo.temp":
             self.data["temp"] = payload
+            self.updatePump()
             print("Adafruit get temperature data: " + payload + " *C")
         elif feed_id == "yolo.humi":
             self.data["humi"] = payload
-            print(payload, type(payload))
-            if int(payload) >= 50:
-                self.data["wind"] = "On"
-            else:
-                self.data["wind"] = "Off"
+            self.updateWind()
             print("Adafruit get huminity data: " + payload + " %")
         elif feed_id == "yolo.bike-locate":
-            print("Adafruit nhan du lieu vi tri day xe: " + payload)
-        elif feed_id == "yolo.bike-db":
-            print("Adafruit nhan du lieu bien so xe: " + payload)
+            print("Adafruit bike location data: " + payload)
+        elif feed_id == "yolo.light":
+            print("Adafruit get light data: " + payload)
+        elif feed_id == "yolo.constraint":
+            print("Adafruit get constraint data: " + payload)
 
     def location(self, information):
         x = json.loads(information)
@@ -62,6 +90,7 @@ class Yolobit:
         self.client.on_subscribe = self.subscribe
         self.client.connect()
         self.client.loop_background()
+        self.updateContraint()
 
     def callDatabase(self, key):
         with open('server\database\\vehicles.json', 'r') as f:
@@ -72,20 +101,22 @@ class Yolobit:
             return result["pos"]
         else:
             return "Not found!"
+        
+    def publishVehiclePark(self, vehicle_id, pos):
+        self.client.publish("yolo.bike-locate", vehicle_id+":"+pos[6:])
 
     def simulateData(self):
         # print("simulate data")
         while True:
-            # self.client.publish("yolo.temp", "{:.2f}".format(self.simulate.random_temp_data()))
-            # self.client.publish("yolo.humi", "{:.2f}".format(self.simulate.random_humi_data()))
-            self.data["temp"] = self.simulate.random_temp_data()
-            self.data["humi"] = self.simulate.random_humi_data()
-            if int(self.data["humi"]) >= 50:
-                self.data["wind"] = "On"
-            else:
-                self.data["wind"] = "Off"
-            # print(self.data)
-            time.sleep(2)
+            # self.client.publish("yolo.temp", self.simulate.random_temp_data())
+            # self.client.publish("yolo.humi", self.simulate.random_humi_data())
+            self.message(self, "yolo.temp", self.simulate.random_temp_data())
+            self.message(None, "yolo.humi", self.simulate.random_humi_data())
+
+            key = cv2.waitKey(1) & 0xFF
+            if key == 27:
+                break
+            time.sleep(5)
 
     def getData(self, field):
         return self.data[field]

@@ -44,7 +44,8 @@ def find_vehicle():
         postData = request.form.to_dict()
         if 'inputVehicleId' in postData:
             vehicle_id = postData["inputVehicleId"]
-            appTracker.findVehicleId(vehicle_id)
+            pos = appTracker.findVehicleId(vehicle_id)
+            iot.publishVehiclePark(vehicle_id, pos)
     return redirect("/", code=302)
 
 @app.route("/data/sensor", methods=["GET"])
@@ -52,7 +53,8 @@ def get_sensor_data():
     temperature = iot.getData('temp')
     humidity = iot.getData('humi')
     wind = iot.getData('wind')
-    return jsonify(temperature=temperature, humidity=humidity, wind=wind)
+    pump = iot.getData('pump')
+    return jsonify(temperature=temperature, humidity=humidity, wind=wind, pump=pump)
 
 @app.route("/data/vehicle_park", methods=["GET"])
 def get_vehicle_park_data():

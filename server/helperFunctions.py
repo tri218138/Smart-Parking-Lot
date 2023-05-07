@@ -74,6 +74,6 @@ class SimulateData:
     def __init__(self):
         pass
     def random_temp_data(self):
-        return "{:.2f}".format(random.uniform(20.0, 30.0))
+        return "{:.2f}".format(random.uniform(20.0, 50.0))
     def random_humi_data(self):
-        return str(int(random.uniform(40.0, 60.0)))
+        return str(int(random.uniform(40.0, 90.0)))

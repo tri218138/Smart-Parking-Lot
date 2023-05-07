@@ -76,6 +76,7 @@ class AppTracker:
             if vehicle["key"] == key:
                 point = np.array(self.convertTupleStringToInt(vehicle["coor"]))
                 self.notifyVehicleCoordination(point, startTime=datetime.now())
+                return vehicle["pos"]
 
     def trackEmptyInRanges(self, frame):
         for idx, range_ in enumerate(self.ranges):
@@ -120,7 +121,7 @@ class AppTracker:
             if not self.isSettingRanges:
                 self.ranges.append({
                     "polygon": [],
-                    "id": f"range {len(self.ranges)}",
+                    "id": f"range {chr(len(self.ranges) + 65)}",
                 })
                 self.isSettingRanges = True
             self.ranges[-1]["polygon"].append([x, y])
