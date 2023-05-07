@@ -3,7 +3,7 @@ import os
 from flask_cors import CORS
 import socket
 import cv2
-from flask import Flask, request, jsonify, Response, render_template
+from flask import Flask, request, jsonify, Response, render_template, redirect
 from trackingVehicle import AppTracking
 import threading
 from iot.yolobit import Yolobit
@@ -48,6 +48,18 @@ def gen_frame():
         yield (b'--frame\r\n'
                 b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
         
+@app.route("/find_vehicle", methods=["POST"])
+def find_vehicle():
+    print("hereeee1")
+    if request.method == 'POST':
+        postData = request.form.to_dict()
+        print(postData)
+        if 'inputVehicleId' in postData:
+            print("hereeee2")
+            vehicle_id = postData["inputVehicleId"]
+            appTracking.findVehicleId(vehicle_id)
+    return redirect("/", code=302)
+
 @app.route("/sensor_data", methods=["GET"])
 def get_sensor_data():
     temperature = iot.getData('temp')
@@ -58,6 +70,9 @@ def get_sensor_data():
 @app.route("/vehicle_parked_data", methods=["GET"])
 def get_vehicle_parked_data():
     return read_json_file('server\database\\vehicle_id.json')
+@app.route("/ranges_data", methods=["GET"])
+def get_ranges_data_data():
+    return appTracking.getAllRanges()
 
 @app.route("/", methods=['GET', 'POST'])
 def main_route():
@@ -67,7 +82,9 @@ def main_route():
     sensorData = render_template('sensor.html')
     videoData = render_template('video.html', source = f"""http://{SERVER["IP"]}:{SERVER["PORT"]}/api/gatecam""")
     inforData = render_template('information.html', inforData = read_json_file('server\database\\vehicle_id.json'))
-    content_ = render_template('layout.html', left=videoData, right=inforData, below=sensorData)
+    rangesData = render_template('information2.html')
+    inputForm = render_template('find_vehicle.html')
+    content_ = render_template('layout.html', row1_col1=videoData, row1_col2=inforData, row2_col1=sensorData, row2_col2=rangesData, row2_col3= inputForm)
     return render_template('index.html', content=content_)
 
 @app.route("/test", methods=['GET', 'POST'])
@@ -88,4 +105,4 @@ def handle_gatecam():
 
 if __name__ == '__main__':
     print(SERVER["IP"])
-    app.run(port=SERVER["PORT"], host=SERVER["IP"], debug=True)
+    app.run(port=SERVER["PORT"], host=SERVER["IP"], debug=True, use_reloader=False)

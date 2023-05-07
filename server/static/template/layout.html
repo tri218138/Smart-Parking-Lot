@@ -1,14 +1,26 @@
 <div class="container">
-    <div class="column column-1">
-        <h2>Video Streamming</h2>
-        {{left | safe}}
-    </div>
-    <div class="column column-2">
-        <h2>Cập nhật nhanh</h2>
-        {{right | safe}}
+    <div class="row">
+        <div class="column">
+            <h2>Camera trực tiếp</h2>
+            {{row1_col1 | safe}}
+        </div>
+        <div class="column column-scroll" style="max-height: 70vh;">
+            <h2>Cập nhật nhanh</h2>
+            {{row1_col2 | safe}}
+        </div>
     </div>
     <div class="row">
-        <h2>Thông số cảm biến</h2>
-        {{below | safe}}
+        <div class="column column-50">
+            <h2>Thông số cảm biến</h2>
+            {{row2_col1 | safe}}
+        </div>
+        <div class="column column-scroll" style="max-height: 20vh;">
+            <h2>Cập nhật nhanh</h2>
+            {{row2_col2 | safe}}
+        </div>
+        <div class="column">
+            <h2>Tìm xe</h2>
+            {{row2_col3 | safe}}
+        </div>
     </div>
 </div>

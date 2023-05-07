@@ -26,22 +26,30 @@ td {
 
 .column {
     flex: 1;
+    background-color: white;
     margin-right: 10px;
 }
 
-.column-1 {
-    background-color: #f2f2f2;
-    max-height: 70vh;
+.column-50 {
+    width: 50%;
 }
 
-.column-2 {
-    background-color: #ddd;
-    max-height: 70vh;
+.column-scroll{
     overflow-y: scroll;
 }
 
+/*
+.column-3 h2 {
+    position: sticky;
+    background-color: #ddd;
+    top: 0;
+    z-index: 1;
+}
+*/
+
 .row {
     display: flex;
+    flex-wrap: nowrap !important;
     justify-content: space-between;
     align-items: center;
     margin-top: 20px;

@@ -22,7 +22,7 @@ class Yolobit:
 
     def __init__(self):
         self.simulate = SimulateData()
-        self.connectMQTTClient()
+        # self.connectMQTTClient()
         self.data = {
             "temp" : "loading...",
             "humi" : "loading...",
