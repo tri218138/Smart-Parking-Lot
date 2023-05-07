@@ -155,9 +155,7 @@ class EuclideanDistTracker:
                 self.id_count += 1
 
 
-
 trackerED = EuclideanDistTracker()
-
 class AppTracking:
     vehicleArea = 30.0
     def __init__(self, path = "server/public/videos/longest.mp4"):
@@ -171,6 +169,7 @@ class AppTracking:
         }
     def getResultFrame(self):
         return self.frame
+    
     def run(self):
         # self.setSpecialFrame(cv2.selectROI(self.frame), "gate")
         # self.setSpecialFrame(cv2.selectROI(self.frame), "range A")
@@ -249,4 +248,3 @@ class AppTracking:
     def getRoi(self, frame, rect):
         x, y, w, h = rect
         return frame[y:y+h,x:x+w]
-# AppTracking().run()

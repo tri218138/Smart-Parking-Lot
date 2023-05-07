@@ -61,21 +61,21 @@ def main_route():
     content_ = render_template('layout.html', left=videoData, right=sensorData)
     return render_template('index.html', content=content_)
 
-@app.route("/test", methods=['GET', 'POST'])
-def handle_test():
-    return "test"
+# @app.route("/test", methods=['GET', 'POST'])
+# def handle_test():
+#     return "test"
 
 
-@app.route("/post", methods=['GET', 'POST'])
-def handle_post_request():
-    data = request.get_json()
-    response = f"Server received: {data}"
-    return jsonify(response), 200
+# @app.route("/post", methods=['GET', 'POST'])
+# def handle_post_request():
+#     data = request.get_json()
+#     response = f"Server received: {data}"
+#     return jsonify(response), 200
 
 
-@app.route("/api/gatecam", methods=['GET'])
-def handle_gatecam():
-    return Response(gen_frame(), mimetype='multipart/x-mixed-replace; boundary=frame', status = 200)
+# @app.route("/api/gatecam", methods=['GET'])
+# def handle_gatecam():
+#     return Response(gen_frame(), mimetype='multipart/x-mixed-replace; boundary=frame', status = 200)
 
 if __name__ == '__main__':
     print(SERVER["IP"])
