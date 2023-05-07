@@ -7,7 +7,8 @@
             [1, 450],
             [2, 118]
         ],
-        "id": "range 0"
+        "id": "Range A",
+        "empty": true
     },
     {
         "polygon": [
@@ -17,7 +18,8 @@
             [226, 174],
             [191, 177]
         ],
-        "id": "range 1"
+        "id": "Range B",
+        "empty": true
     },
     {
         "polygon": [
@@ -27,7 +29,8 @@
             [281, 164],
             [238, 168]
         ],
-        "id": "range 2"
+        "id": "Range C",
+        "empty": true
     },
     {
         "polygon": [
@@ -37,7 +40,8 @@
             [330, 163],
             [294, 166]
         ],
-        "id": "range 3"
+        "id": "Range D",
+        "empty": true
     },
     {
         "polygon": [
@@ -47,7 +51,8 @@
             [378, 161],
             [344, 163]
         ],
-        "id": "range 4"
+        "id": "Range E",
+        "empty": true
     },
     {
         "polygon": [
@@ -57,7 +62,8 @@
             [427, 160],
             [396, 161]
         ],
-        "id": "range 5"
+        "id": "Range F",
+        "empty": true
     },
     {
         "polygon": [
@@ -67,7 +73,8 @@
             [472, 157],
             [439, 158]
         ],
-        "id": "range 6"
+        "id": "Range G",
+        "empty": true
     },
     {
         "polygon": [
@@ -77,7 +84,8 @@
             [514, 155],
             [483, 159]
         ],
-        "id": "range 7"
+        "id": "Range H",
+        "empty": true
     },
     {
         "polygon": [
@@ -87,7 +95,8 @@
             [557, 160],
             [526, 155]
         ],
-        "id": "range 8"
+        "id": "Range I",
+        "empty": true
     },
     {
         "polygon": [
@@ -97,7 +106,8 @@
             [600, 156],
             [570, 158]
         ],
-        "id": "range 9"
+        "id": "Range J",
+        "empty": true
     },
     {
         "polygon": [
@@ -108,7 +118,8 @@
             [647, 151],
             [611, 151]
         ],
-        "id": "range 10"
+        "id": "Range K",
+        "empty": true
     },
     {
         "polygon": [
@@ -118,6 +129,7 @@
             [810, 130],
             [742, 138]
         ],
-        "id": "range 11"
+        "id": "Range L",
+        "empty": true
     }
 ]

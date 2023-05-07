@@ -1,3 +1,3 @@
-from trackingVehicle import AppTracking
+from appTracker import AppTracker
 
-AppTracking().setMultiRanges()
+AppTracker().setMultiRanges()

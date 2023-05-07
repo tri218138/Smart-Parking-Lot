@@ -1,19 +1,9 @@
-import random
 import json
 import time
-import  sys
-import cv2
+import sys
+import threading
 from  Adafruit_IO import  MQTTClient
-# from firebase import firebase
-import random
-
-class SimulateData:
-    def __init__(self):
-        pass
-    def random_temp_data(self):
-        return "{:.2f}".format(random.uniform(20.0, 30.0))
-    def random_humi_data(self):
-        return str(int(random.uniform(40.0, 60.0)))
+from helperFunctions import SimulateData
 
 class Yolobit:
     AIO_FEED_IDS = ["yolo.humi", "yolo.temp", "yolo.bike-db", "yolo.bike-locate"]
@@ -29,22 +19,24 @@ class Yolobit:
             "wind" : "Off",
         }
 
+        threading.Timer(0, self.simulateData).start()
+
     def connected(self, client):
-        print("Ket noi thanh cong...")
+        print("Connect successful...")
         for feed in Yolobit.AIO_FEED_IDS:
             self.client.subscribe(feed)
 
     def subscribe(self, client , userdata , mid , granted_qos):
-        print("Subcribe thanh cong...")
+        print("Subcribe successful...")
 
     def disconnected(self, client):
-        print("Ngat ket noi...")
-        sys.exit (1)
+        print("Break connection...")
+        sys.exit(1)
 
     def message(self, client , feed_id , payload):
         if feed_id == "yolo.temp":
             self.data["temp"] = payload
-            print("Adafruit nhan du lieu nhiet do: " + payload + " *C")
+            print("Adafruit get temperature data: " + payload + " *C")
         elif feed_id == "yolo.humi":
             self.data["humi"] = payload
             print(payload, type(payload))
@@ -52,7 +44,7 @@ class Yolobit:
                 self.data["wind"] = "On"
             else:
                 self.data["wind"] = "Off"
-            print("Adafruit nhan du lieu do am: " + payload + " %")
+            print("Adafruit get huminity data: " + payload + " %")
         elif feed_id == "yolo.bike-locate":
             print("Adafruit nhan du lieu vi tri day xe: " + payload)
         elif feed_id == "yolo.bike-db":
@@ -72,7 +64,7 @@ class Yolobit:
         self.client.loop_background()
 
     def callDatabase(self, key):
-        with open('server\database\\vehicle_id.json', 'r') as f:
+        with open('server\database\\vehicles.json', 'r') as f:
             data = json.load(f)
         result = next((item for item in data if item['key'] == key), None)
         if result is not None:
@@ -97,13 +89,5 @@ class Yolobit:
 
     def getData(self, field):
         return self.data[field]
-
-    # def run(self):
-    #     while True:
-    #         keyboard = cv2.waitKey(1)
-    #         if keyboard == 27:
-    #             break
-    #         time.sleep(5)
-    #         self.simulateData()
-
-# Yolobit().run()
+    
+# iot = Yolobit()

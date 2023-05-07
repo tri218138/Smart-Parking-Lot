@@ -1,5 +1,5 @@
 function updateSensorData() {
-    fetch("/sensor_data")
+    fetch("/data/sensor")
         .then((response) => response.json())
         .then((data) => {
             document.getElementById("temperature").textContent =
@@ -10,10 +10,10 @@ function updateSensorData() {
 }
 
 function updateVehicleParkedData() {
-    fetch("/vehicle_parked_data")
+    fetch("/data/vehicle_park")
         .then((response) => response.json())
         .then((data) => {
-            var tableBody = document.getElementById("informations-body");
+            var tableBody = document.getElementById("vehicle-park-body");
             tableBody.innerHTML = "";
             data.reverse();
             // Loop over the data and populate the table rows
@@ -42,10 +42,10 @@ function updateVehicleParkedData() {
         });
 }
 function updateRangesData() {
-    fetch("/ranges_data")
+    fetch("/data/ranges")
         .then((response) => response.json())
         .then((data) => {
-            var tableBody = document.getElementById("informations2-body");
+            var tableBody = document.getElementById("range-state-body");
             tableBody.innerHTML = "";
             // Loop over the data and populate the table rows
             data.forEach(function (item) {
