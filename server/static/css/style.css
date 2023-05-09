@@ -1,0 +1,56 @@
+body {
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+h1,
+h2 {
+    text-align: center;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+th,
+td {
+    padding: 20px;
+    border: 1px solid black;
+}
+
+.container {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.column {
+    flex: 1;
+    background-color: white;
+    margin-right: 10px;
+}
+
+.column-50 {
+    width: 50%;
+}
+
+.column-scroll{
+    overflow-y: scroll;
+}
+
+/*
+.column-3 h2 {
+    position: sticky;
+    background-color: #ddd;
+    top: 0;
+    z-index: 1;
+}
+*/
+
+.row {
+    display: flex;
+    flex-wrap: nowrap !important;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+}
