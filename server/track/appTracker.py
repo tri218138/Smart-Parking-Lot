@@ -6,14 +6,6 @@ from track.helperFunctions import is_rect_inside_another, read_json_file, write_
 from track.euclideanDistTracker import EuclideanDistTracker
 import pathlib
 
-from skimage.feature import peak_local_max
-from skimage.segmentation import watershed
-from scipy import ndimage
-import numpy as np
-import argparse
-import imutils
-import cv2
-
 HOME_PATH = pathlib.Path(__file__).parent.parent
 
 class Frame:

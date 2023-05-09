@@ -82,7 +82,9 @@ if __name__ == '__main__':
     print("Ip server", SERVER["IP"])
     if "clear" in sys.argv:
         if "ranges" in sys.argv:
-            write_json_file('server\database\\rangws.json', [])
+            n = input("Confirm 1|0: ")
+            if n == "1":
+                write_json_file('server\database\\ranges.json', [])
         if "vehicles" in sys.argv:
             write_json_file('server\database\\vehicles.json', [])
     elif "init_range" in sys.argv:
@@ -96,5 +98,6 @@ if __name__ == '__main__':
             iot.runSimulateMode()
         else:
             iot.connectMQTTClient()
+        write_json_file('server\database\\vehicles.json', [])
         appTracker.startMultiThreading()
         app.run(port=SERVER["PORT"], host=SERVER["IP"], debug=True, use_reloader=False)

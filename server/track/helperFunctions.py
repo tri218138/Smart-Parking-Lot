@@ -44,11 +44,12 @@ def point_inside_polygon(point, polygon):
 def generate_random_vehicle_id():
     digits = random.choices(string.digits, k=2)
     uppercase_alpha = random.choice(string.ascii_uppercase)
+    digits2 = random.choices(string.digits, k=1)
     separator = '-'
     more_digits = random.choices(string.digits, k=5)
 
     random_string = ''.join(
-        digits + [uppercase_alpha] + [separator] + more_digits)
+        digits + [uppercase_alpha] + digits2 + [separator] + more_digits)
     return random_string
 
 
