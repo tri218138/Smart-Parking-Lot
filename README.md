@@ -8,4 +8,5 @@ pip install -r requirements.txt
 + Clear ranges:     python server/server.py clear ranges  
 + Clear vehicles:   python server/server.py clear vehicles  
 + Setup ranges:     python server/server.py init_range  
++ View our frame:   python server/server.py show_frame  
 3) Check if the server is running: go to browser, access your IP + Port 5050
