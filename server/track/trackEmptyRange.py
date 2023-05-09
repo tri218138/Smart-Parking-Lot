@@ -1,4 +1,4 @@
-from appTracker import AppTracker
+from track.appTracker import AppTracker
 
 appTracker = AppTracker()
 appTracker.trackEmptyInRanges(appTracker.getResultFrame())

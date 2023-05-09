@@ -1,15 +1,21 @@
 import cv2
-from tracker import *
-import math
-import time
 from datetime import datetime, timedelta
 import numpy as np
-from scipy import stats, polyfit
-import json
 import threading
-from helperFunctions import is_rect_inside_another, read_json_file, write_json_file
-from vehicle import Vehicle
-from euclideanDistTracker import EuclideanDistTracker
+from track.helperFunctions import is_rect_inside_another, read_json_file, write_json_file
+from track.euclideanDistTracker import EuclideanDistTracker
+import pathlib
+
+HOME_PATH = pathlib.Path(__file__).parent.parent
+
+class Frame:
+    def __init__(self):
+        self.main = None
+        self.special = None
+        self.first = None
+        self.roi = None
+        self.mask = None
+        self.empty = None
 
 class AppTracker:
     vehicleArea = 30.0
@@ -19,27 +25,52 @@ class AppTracker:
         self.cap = cv2.VideoCapture(path)
         self.object_detector = cv2.createBackgroundSubtractorMOG2(history=200, varThreshold=50, detectShadows=False)
         self.trackerED = EuclideanDistTracker()
+        self.frames = Frame()
 
-        self.ret, self.frame = self.cap.read()
+        self.ret, self.frames.main = self.cap.read()
 
         # self.mTT = MeasureTakenTime()
 
-        self.specialFrame = {
-            "gate": [600, 70, self.frame.shape[1] - 600 - 80, 70]
+        self.frames.special = {
+            "gate": [600, 70, self.frames.main.shape[1] - 600 - 80, 70]
         }
+        self.frames.roi = self.getRoi(self.frames.main, self.getSpecialFrame())
 
         self.isSettingRanges = False
         self.ranges = []
 
-        self.firstFrame = None
+        self.frames.first = None
 
         self.collectFirstFrame()
         self.loadMultiRanges()
 
+    def showFrames(self):
+        future = datetime.now() + timedelta(seconds = 2)
+        while datetime.now() < future:
+            self.work()
+        self.trackEmptyInRanges(self.frames.first)
+        self.drawPolygonSettings()
+        while True:
+            cv2.imshow("main", self.frames.main)
+            cv2.imshow("mask", self.frames.mask)
+            cv2.imshow("roi", self.frames.roi)
+            cv2.imshow("ranges", self.frames.first)
+            cv2.imshow("empty", self.frames.empty)
+            key = cv2.waitKey(1) & 0xFF
+            if key == 27:
+                break
+        cv2.imwrite("server/public/frames/main.jpg", self.frames.main)
+        cv2.imwrite("server/public/frames/mask.jpg", self.frames.mask)
+        cv2.imwrite("server/public/frames/roi.jpg", self.frames.roi)
+        cv2.imwrite("server/public/frames/ranges.jpg", self.frames.first)
+        cv2.imwrite("server/public/frames/empty.jpg", self.frames.empty)
+
+
+    def startMultiThreading(self):
         self.call_function_with_interval_2()
 
     def call_function_with_interval_2(self):
-        self.trackEmptyInRanges(self.frame)
+        self.trackEmptyInRanges(self.frames.main)
         threading.Timer(2.0, self.call_function_with_interval_2).start()
 
     def getPolygonFrame(self, frame, polygon):
@@ -61,10 +92,10 @@ class AppTracker:
             threading.Timer(0, threading._shutdown).start()
             return        
         threading.Timer(0.1, self.notifyVehicleCoordination, args=(centerPoint, startTime)).start()
-        cv2.circle(self.frame, centerPoint, 1, (0, 0, 255), 2)
-        cv2.circle(self.frame, centerPoint, 10, (0, 0, 255), 2)
-        cv2.circle(self.frame, centerPoint, 15, (0, 0, 255), 2)
-        # cv2.imshow("finding", self.frame)
+        cv2.circle(self.frames.main, centerPoint, 1, (0, 0, 255), 2)
+        cv2.circle(self.frames.main, centerPoint, 10, (0, 0, 255), 2)
+        cv2.circle(self.frames.main, centerPoint, 15, (0, 0, 255), 2)
+        # cv2.imshow("finding", self.frames.main)
         # cv2.waitKey(0)
 
     def convertTupleStringToInt(self, string_):
@@ -93,6 +124,9 @@ class AppTracker:
             
             contour_image = cv2.cvtColor(binary_image, cv2.COLOR_GRAY2BGR)
             cv2.drawContours(contour_image, contours, -1, (0, 255, 0), 2)
+            if self.frames.empty is None: self.frames.empty = contour_image
+            else: self.frames.empty = cv2.bitwise_or(self.frames.empty, contour_image)
+            # self.frames.empty = contour_image
 
             empty_areas = self.getAreaOfEmptyInRanges(contours)
             
@@ -109,12 +143,12 @@ class AppTracker:
         return self.ranges
 
     def getResultFrame(self):
-        return self.frame
+        return self.frames.main
 
     def collectFirstFrame(self):
         while not self.ret:
-            self.ret, self.frame = self.cap.read()
-        self.firstFrame = self.frame
+            self.ret, self.frames.main = self.cap.read()
+        self.frames.first = self.frames.main
 
     def mouse_callback(self, event, x, y, flags, param):
         if event == cv2.EVENT_LBUTTONDOWN:
@@ -133,26 +167,26 @@ class AppTracker:
         if len(self.ranges) > 0:
             for i in range(0, len(self.ranges) - 1):
                 if len(self.ranges[i]["polygon"]) == 1:
-                    cv2.circle(self.firstFrame,
+                    cv2.circle(self.frames.first,
                                self.ranges[i]["polygon"][0], 1, (0, 255, 0), 5)
                 else:
-                    cv2.polylines(self.firstFrame, [np.array(
+                    cv2.polylines(self.frames.first, [np.array(
                         self.ranges[i]["polygon"])], True, (0, 255, 0), 5)
             if len(self.ranges[-1]["polygon"]) == 1:
-                cv2.circle(self.firstFrame,
+                cv2.circle(self.frames.first,
                            self.ranges[-1]["polygon"][0], 1, (0, 0, 255), 5)
             else:
-                cv2.polylines(self.firstFrame, [np.array(
+                cv2.polylines(self.frames.first, [np.array(
                     self.ranges[-1]["polygon"])], False if self.isSettingRanges else True, (0, 0, 255) if self.isSettingRanges else (0, 255, 0), 5)
 
     def setMultiRanges(self):
-        if self.firstFrame is not None:
+        if self.frames.first is not None:
             cv2.namedWindow('Set multi ranges')
             cv2.setMouseCallback('Set multi ranges', self.mouse_callback)
 
             while True:
                 self.drawPolygonSettings()
-                cv2.imshow('Set multi ranges', self.firstFrame)
+                cv2.imshow('Set multi ranges', self.frames.first)
 
                 key = cv2.waitKey(1) & 0xFF
                 if key == 27:
@@ -164,18 +198,18 @@ class AppTracker:
         self.ranges = read_json_file('server\database\\ranges.json')
 
     # def run(self):
-    #     # self.setSpecialFrame(cv2.selectROI(self.frame), "gate")
-    #     # self.setSpecialFrame(cv2.selectROI(self.frame), "range A")
-    #     # self.setSpecialFrame(cv2.selectROI(self.frame), "range B")
+    #     # self.setSpecialFrame(cv2.selectROI(self.frames.main), "gate")
+    #     # self.setSpecialFrame(cv2.selectROI(self.frames.main), "range A")
+    #     # self.setSpecialFrame(cv2.selectROI(self.frames.main), "range B")
 
     #     # self.setMultiRanges()
     #     self.loadMultiRanges()
 
     #     while True:
-    #         self.ret, self.frame = self.cap.read()
+    #         self.ret, self.frames.main = self.cap.read()
     #         if not self.ret:
     #             continue
-    #         roi = self.frame
+    #         roi = self.frames.main
     #         detected_rect = self.detect(roi)
 
     #         specFrame = self.getSpecialFrame()
@@ -195,11 +229,11 @@ class AppTracker:
     #                         cv2.FONT_HERSHEY_COMPLEX, 0.5, (255, 0, 0), 1)
     #             cv2.rectangle(roi, (x, y), (x + w, y + h), (0, 255, 0), 1)
 
-    #         roi = self.getRoi(self.frame, self.getSpecialFrame())
+    #         roi = self.getRoi(self.frames.main, self.getSpecialFrame())
 
     #         # cv2.imshow("Mask", self.mask)
-    #         cv2.imshow("Ranges", self.firstFrame)
-    #         cv2.imshow("Frame", self.frame)
+    #         cv2.imshow("Ranges", self.frames.first)
+    #         cv2.imshow("Frame", self.frames.main)
     #         # cv2.imshow("Roi", roi)
 
     #         key = cv2.waitKey(10)
@@ -210,8 +244,8 @@ class AppTracker:
     #     cv2.destroyAllWindows()
 
     def work(self):
-        self.ret, self.frame = self.cap.read()
-        roi = self.frame
+        self.ret, self.frames.main = self.cap.read()
+        roi = self.frames.main
         detected_rect = self.detect(roi)
 
         specFrame = self.getSpecialFrame()
@@ -232,14 +266,13 @@ class AppTracker:
                         cv2.FONT_HERSHEY_COMPLEX, 0.5, (255, 0, 0), 1)
             cv2.rectangle(roi, (x, y), (x + w, y + h), (0, 255, 0), 1)
 
-        roi = self.getRoi(self.frame, self.getSpecialFrame())
-
     def detect(self, roi) -> list():
         mask = self.object_detector.apply(roi)
         detections = []
 
-        _, self.mask = cv2.threshold(
+        _, mask = cv2.threshold(
             mask, 254, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        self.frames.mask = mask
         contours, _ = cv2.findContours(
             mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -251,13 +284,13 @@ class AppTracker:
         return detections
 
     def setSpecialFrame(self, rect, name="gate"):
-        self.specialFrame[name] = rect
+        self.frames.special[name] = rect
 
     def getSpecialFrame(self, name="gate"):
-        return self.specialFrame[name]
+        return self.frames.special[name]
 
     def getAllSpecialFrames(self):
-        return self.specialFrame
+        return self.frames.special
 
     def getRoi(self, frame, rect):
         x, y, w, h = rect

@@ -2,5 +2,10 @@
 
 1) Install Dependencies
 pip install -r requirements.txt
-2) Run: py server.py
-3) Check if the server is running: go to browser, access http://localhost:5000/test
+2) How to run
++ Normal run:       python server/server.py  
++ Simulate run:     python server/server.py simulate  
++ Clear ranges:     python server/server.py clear ranges  
++ Clear vehicles:   python server/server.py clear vehicles  
++ Setup ranges:     python server/server.py init_range  
+3) Check if the server is running: go to browser, access your IP + Port 5050

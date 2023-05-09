@@ -1,12 +1,12 @@
-from flask import Flask, request, jsonify
-import os
-from flask_cors import CORS
-import socket
-import cv2
 from flask import Flask, request, jsonify, Response, render_template, redirect
-from appTracker import AppTracker
-from helperFunctions import read_json_file
+from flask_cors import CORS
+import os
+import socket
+import sys
+import cv2
 from iot.yolobit import Yolobit
+from track.appTracker import AppTracker
+from track.helperFunctions import read_json_file, write_json_file
 
 SERVER  = {
     "PORT" : 5050,
@@ -80,4 +80,19 @@ def handle_gatecam():
 
 if __name__ == '__main__':
     print("Ip server", SERVER["IP"])
-    app.run(port=SERVER["PORT"], host=SERVER["IP"], debug=True, use_reloader=False)
+    if "clear" in sys.argv:
+        if "ranges" in sys.argv:
+            write_json_file('server\database\\rangws.json', [])
+        if "vehicles" in sys.argv:
+            write_json_file('server\database\\vehicles.json', [])
+    elif "init_range" in sys.argv:
+        appTracker.setMultiRanges()
+    elif "show_frame" in sys.argv:
+        appTracker.showFrames()
+    else:
+        if "simulate" in sys.argv:
+            iot.runSimulateMode()
+        else:
+            iot.connectMQTTClient()
+        appTracker.startMultiThreading()
+        app.run(port=SERVER["PORT"], host=SERVER["IP"], debug=True, use_reloader=False)

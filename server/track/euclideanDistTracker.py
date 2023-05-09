@@ -1,7 +1,10 @@
-from helperFunctions import *
-from vehicle import Vehicle
 import math
+import threading
 from datetime import datetime
+
+from track.helperFunctions import *
+from track.vehicle import Vehicle
+from plate.plateDetector import GetLicensePlateDemo
 
 class EuclideanDistTracker:
     threshold = 15.0
@@ -9,6 +12,7 @@ class EuclideanDistTracker:
     def __init__(self):
         self.vehicles = {}
         self.id_count = Vehicle.id_counter
+        self.plate_detector = GetLicensePlateDemo()
 
     def removeDuplicate(self):
         for key in list(self.vehicles.keys()):
@@ -80,7 +84,7 @@ class EuclideanDistTracker:
                 for range_ in ranges:
                     if point_inside_polygon(self.vehicles[key].getCenterPoint(), range_["polygon"]):
                         new_data.append({
-                            "key": f"{generate_random_vehicle_id()}",
+                            "key": f"{self.plate_detector.get_licenses_by_key(key)}",
                             "id": f"{key}",
                             "pos": f"{range_['id']}",
                             "coor": f"{self.vehicles[key].getCenterPoint()}",
@@ -103,4 +107,6 @@ class EuclideanDistTracker:
                 continue
             else:  # New object is detected we assign the ID to that object
                 self.vehicles[self.id_count] = Vehicle(self.id_count, rect)
+                threading.Timer(0, self.plate_detector.get_licenses_by_key, args=(self.id_count,)).start()
+
                 self.id_count += 1

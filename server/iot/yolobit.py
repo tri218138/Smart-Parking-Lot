@@ -1,10 +1,12 @@
+import sys
 import json
 import time
-import sys
 import threading
-from  Adafruit_IO import  MQTTClient, Client
-from helperFunctions import SimulateData
 import cv2
+import pathlib
+from  Adafruit_IO import  MQTTClient, Client
+
+from track.helperFunctions import SimulateData
 
 class Yolobit:
     AIO_FEED_IDS = ["yolo.humi", "yolo.temp", "yolo.light", "yolo.bike-locate", "yolo.constraint"]
@@ -14,17 +16,16 @@ class Yolobit:
         "temp": 80,
         "humi": 35.0
     }
+
     def __init__(self):
-        self.simulate = SimulateData()
-        self.connectMQTTClient()
+        # self.connectMQTTClient()
         self.data = {
             "temp" : "loading...",
             "humi" : "loading...",
             "wind" : "Off",
             "pump" : "Off",
-        }
-
-        threading.Timer(0, self.simulateData).start()
+        }        
+        self.simulate = None
 
     def connected(self, client):
         print("Connect successful...")
@@ -103,15 +104,19 @@ class Yolobit:
             return "Not found!"
         
     def publishVehiclePark(self, vehicle_id, pos):
+        if self.simulate is not None: return
         self.client.publish("yolo.bike-locate", vehicle_id+":"+pos[6:])
 
-    def simulateData(self):
-        # print("simulate data")
+    def runSimulateMode(self):
+        self.simulate = SimulateData()
+        threading.Timer(0, self.simulateData).start()
+
+    def simulateData(self):        
         while True:
             # self.client.publish("yolo.temp", self.simulate.random_temp_data())
             # self.client.publish("yolo.humi", self.simulate.random_humi_data())
             self.message(self, "yolo.temp", self.simulate.random_temp_data())
-            self.message(None, "yolo.humi", self.simulate.random_humi_data())
+            self.message(self, "yolo.humi", self.simulate.random_humi_data())
 
             key = cv2.waitKey(1) & 0xFF
             if key == 27:
