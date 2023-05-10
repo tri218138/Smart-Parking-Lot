@@ -23,6 +23,7 @@ class AppTracker:
     emptyArea = 100.0
 
     def __init__(self, path="server/public/videos/video1.mp4"):
+        self.path = path
         self.cap = cv2.VideoCapture(path)
         self.object_detector = cv2.createBackgroundSubtractorMOG2(history=200, varThreshold=50, detectShadows=False)
         self.trackerED = EuclideanDistTracker()
@@ -71,6 +72,8 @@ class AppTracker:
         self.call_function_with_interval_2()
 
     def call_function_with_interval_2(self):
+        if cv2.waitKey(1) == 27:
+            return
         self.trackEmptyInRanges(self.frames.main)
         threading.Timer(2.0, self.call_function_with_interval_2).start()
 
@@ -261,6 +264,7 @@ class AppTracker:
 
     def work(self):
         self.ret, self.frames.main = self.cap.read()
+        if "http" in self.path: return
         roi = self.frames.main
         detected_rect = self.detect(roi)
 

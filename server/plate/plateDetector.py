@@ -9,7 +9,8 @@ HOME_PATH = pathlib.Path(__file__).parent.parent
 class GetLicensePlateDemo:
     IMAGE_PATH = HOME_PATH / 'public' / 'images'
 
-    def __init__(self):
+    def __init__(self, isSimulate = False):
+        self.isSimulate = isSimulate
         self.session = requests.Session() 
         self.token = self.get_free_token()
         self.licenses = {
@@ -43,7 +44,8 @@ class GetLicensePlateDemo:
         return license[:4] + "-" + license[4:]
 
     def get_licenses_by_key(self, key):
-        # return generate_random_vehicle_id()
+        if self.isSimulate:
+            return generate_random_vehicle_id()
         # print("len ===========", len(os.listdir(GetLicensePlateDemo.IMAGE_PATH)))
         key = key % len(os.listdir(GetLicensePlateDemo.IMAGE_PATH))
         if key in self.licenses: return self.licenses[key]

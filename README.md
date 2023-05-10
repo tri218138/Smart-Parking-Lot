@@ -9,4 +9,8 @@ pip install -r requirements.txt
 + Clear vehicles:   python server/server.py clear vehicles  
 + Setup ranges:     python server/server.py init_range  
 + View our frame:   python server/server.py show_frame  
-3) Check if the server is running: go to browser, access your IP + Port 5050
+3) Check if the server is running: go to browser, access your IP + Port 5050  
+
+Remember:  
++ Run VPN to ignore daily limit from plateAPI  
++ Open Webcam IP and correct its IP  

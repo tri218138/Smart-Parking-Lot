@@ -8,7 +8,6 @@ from plate.plateDetector import GetLicensePlateDemo
 
 class EuclideanDistTracker:
     threshold = 15.0
-
     def __init__(self):
         self.vehicles = {}
         self.id_count = Vehicle.id_counter

@@ -7,6 +7,7 @@ import cv2
 from iot.yolobit import Yolobit
 from track.appTracker import AppTracker
 from track.helperFunctions import read_json_file, write_json_file
+from plate.plateDetector import GetLicensePlateDemo
 
 SERVER  = {
     "PORT" : 5050,
@@ -24,7 +25,7 @@ CORS(app)
 
 iot = Yolobit()
 
-video_stream_path = "http://192.168.61.215:8080/video"
+video_stream_path = "http://192.168.1.2:8080/video"
 # appTracker = AppTracker(video_stream_path)
 appTracker = AppTracker()
 
@@ -96,8 +97,10 @@ if __name__ == '__main__':
     else:
         if "simulate" in sys.argv:
             iot.runSimulateMode()
+            appTracker.trackerED.plate_detector = GetLicensePlateDemo(True)
         else:
             iot.connectMQTTClient()
         write_json_file('server\database\\vehicles.json', [])
-        appTracker.startMultiThreading()
+        if appTracker.path == "server/public/videos/video1.mp4":
+            appTracker.startMultiThreading()
         app.run(port=SERVER["PORT"], host=SERVER["IP"], debug=True, use_reloader=False)
