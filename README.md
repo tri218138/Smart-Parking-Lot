@@ -62,7 +62,7 @@ python server/server.py show_frame
 ## UI
 <div style="text-align:center">
 <img src="./assets/images/frontend_result.png" width="500"/>
-<p>Our results</p>
+<p>Our results: https://www.youtube.com/watch?v=WGXOUTGorco</p>
 </div>
 
 <div style="text-align:center">
