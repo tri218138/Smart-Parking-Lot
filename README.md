@@ -62,8 +62,8 @@ python server/server.py show_frame
 ## UI
 <div style="text-align:center">
 <img src="./assets/images/frontend_result.png" width="500"/>
-<p>Our results: https://www.youtube.com/watch?v=WGXOUTGorco</p>
 </div>
+<img src="https://github.com/tri218138/Smart-Parking-Lot/assets/80521604/a878836b-435e-44bd-83e2-c2883e96cb2c" width="25"/> Our results: https://www.youtube.com/watch?v=WGXOUTGorco
 
 <div style="text-align:center">
 <img src="./assets/images/ranges_setup.jpg" width="500"/>
